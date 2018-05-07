@@ -27,6 +27,10 @@
 #include "vfd.h"
 #include "mblog.h"
 
+// #define MB_VFD_TITLE "  mb'knobs    "
+// #define MB_VFD_TITLE "  mb'drums    "
+#define MB_VFD_TITLE "  grand'pa    "
+
 const int PIN_DISP_RS = 4;
 const int PIN_DISP_CS = 5;
 const int PIN_LED = 13;
@@ -89,7 +93,10 @@ void setup()
     MIDI.setHandleClock(MbMidiRouter::handleClock);
     MIDI.setHandleNoteOn(MbMidiRouter::handleNoteOn);
     MIDI.setHandleNoteOff(MbMidiRouter::handleNoteOff);
-    // MIDI.setHandleControlChange(MbMidiRouter::handleControlChange);
+    MIDI.setHandlePitchBend(MbMidiRouter::handlePitchBend);
+    MIDI.setHandleStart(MbMidiRouter::handleStart);
+    MIDI.setHandleStop(MbMidiRouter::handleStop);
+    MIDI.setHandleControlChange(MbMidiRouter::handleControlChange);
     //MIDI.setHandleAfterTouchChannel(void (*fptr)(byte channel, byte pressure));
     //MIDI.setHandlePitchBend(void (*fptr)(byte channel, int bend));
     // MIDI.turnThruOn(MIDI_NAMESPACE::Full);
@@ -181,24 +188,31 @@ void loopVisualization()
             }
             else
             {
-                VFD.write_page(MbVFD::INFO, "  mb'knobs    ");
+                VFD.write_page(MbVFD::INFO, MB_VFD_TITLE);
             }
         }
         break;
     }
     //VFD.position(11, 0);
     // ableton: if((MIRO.getClockState() % (12*4)) <= 6*4)
+    int cL = 0x4487;
+    int cR = 0x4478;
+    if(!MIRO.getRunning())
+    {
+        cL = 0x4401;
+        cR = 0x4420;
+    }
     if ((MIRO.getClockState() % (12 * 4)) <= 6 * 4) // 0-191 = 24*4*2 2 takte ala 4ter
     {
         //VFD.write_page(0, "<"); // 7
         VFD.getPage(VFD.INFO)[11] = 11;
-        VFD.define_char(11, 0x4487);
+        VFD.define_char(11, cL);
     }
     else
     {
         //VFD.write_page(0, ">"); // L
         VFD.getPage(VFD.INFO)[11] = 11;
-        VFD.define_char(11, 0x4478);
+        VFD.define_char(11, cR);
     }
 
     VFD.position(0, 0);
@@ -327,14 +341,14 @@ void midiLoop()
                 break;
             case midi::ControlChange:
                 {
-                MIRO.handleControlChange(MIDI.getChannel(), MIDI.getData1(), MIDI.getData2() );
+                // MIRO.handleControlChange(MIDI.getChannel(), MIDI.getData1(), MIDI.getData2() );
 
                 String sval1(MIDI.getData1());
                 VFD.position(9, 0);
                 VFD.write_page(VFD.CV3, "   ");
                 VFD.position(9+int(MIDI.getData1()<10)+int(MIDI.getData1()<100), 0);
                 VFD.write_page(VFD.CV3, sval1.c_str());
-                LOG << "CC " <<MIDI.getData1() <<" " <<MIDI.getData2() <<"\n";
+                // LOG << "CC " <<MIDI.getData1() <<" " <<MIDI.getData2() <<"\n";
                 }
                 break;
             // See the online reference for other message types

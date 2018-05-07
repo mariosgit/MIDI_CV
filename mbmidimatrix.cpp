@@ -22,6 +22,11 @@ void MbMidiConfig::restore()
     ccCV3     = EEPROM.read(address++);
 }
 
+/*************************************************/
+
+byte MbMidiRouter::_bend = 0;
+bool MbMidiRouter::_running = false;
+
 MbMidiRouter::MbMidiRouter() :
     _lastPitch(0xff),
     _clockState(false)
@@ -60,20 +65,39 @@ void MbMidiRouter::handleNoteOff(byte channel, byte pitch, byte velocity)
     MBCV.updateCV(0, 0); //gate off
 }
 
+void MbMidiRouter::handlePitchBend(byte channel, byte bend)
+{
+    _bend = bend;
+    LOG <<"handlePitchBend ch:" <<channel <<", bend:" <<_bend <<"\n";
+    // MBCV.updateCV(value, 1);
+}
+
 void MbMidiRouter::handleControlChange(byte channel, byte cc, byte value)
 {
-  if(channel != _config.myChannel)
-    return;
-  if(cc != _config.ccCV3)
-    return;
+    if(channel != _config.myChannel)
+        return;
+    if(cc != _config.ccCV3)
+        return;
 //   LOG <<"handleControlChange:" <<channel <<", cc:" <<cc <<", value:" <<value <<"\n";
-  MBCV.updateCV(value, 3);
+    MBCV.updateCV(value, 3);
 }
 
 void MbMidiRouter::handleClock()
 {
     MIRO._clockState = (MIRO._clockState + 1) % (24*8);
     // LOG <<MIRO._clockState <<",";
+}
+
+void MbMidiRouter::handleStart()
+{
+    MIRO._clockState = 0;
+    MIRO._running = true;
+}
+
+void MbMidiRouter::handleStop()
+{
+    // MIRO._clockState = 0;
+    MIRO._running = false;
 }
 
 #define _midiusb_ 1
