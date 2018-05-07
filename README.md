@@ -9,7 +9,8 @@ lib files (.h + .cpp).
 The latter could also be used as a stand alone lib when put into your Arduino
 library folder.
 
-How it works
+### How it works
+Well uhm yea it does somehow...
 
 ### Used Libraries
 - Timer
@@ -17,6 +18,5 @@ How it works
 - MidiUSB
 - encoder
 
-
-Display:
+### Display
 Extra thing, somewhat optional or replaceable by DOGM or similar SPI based displays.
