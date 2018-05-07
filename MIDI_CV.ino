@@ -327,14 +327,14 @@ void midiLoop()
                 break;
             case midi::ControlChange:
                 {
-                MIRO.handleControlChange(MIDI.getChannel(), MIDI.getData1(), MIDI.getData1() );
+                MIRO.handleControlChange(MIDI.getChannel(), MIDI.getData1(), MIDI.getData2() );
 
                 String sval1(MIDI.getData1());
                 VFD.position(9, 0);
-                VFD.write_page(3, "   ");
-                VFD.position(9, 0);
-                VFD.write_page(3, sval1.c_str());
-                LOG << "CC " <<MIDI.getData1() <<" " <<MIDI.getData1() <<"\n";
+                VFD.write_page(VFD.CV3, "   ");
+                VFD.position(9+int(MIDI.getData1()<10)+int(MIDI.getData1()<100), 0);
+                VFD.write_page(VFD.CV3, sval1.c_str());
+                LOG << "CC " <<MIDI.getData1() <<" " <<MIDI.getData2() <<"\n";
                 }
                 break;
             // See the online reference for other message types

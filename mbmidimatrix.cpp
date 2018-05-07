@@ -60,16 +60,18 @@ void MbMidiRouter::handleNoteOff(byte channel, byte pitch, byte velocity)
     MBCV.updateCV(0, 0); //gate off
 }
 
-void MbMidiRouter::handleControlChange(byte channel, byte cc, byte value) {
+void MbMidiRouter::handleControlChange(byte channel, byte cc, byte value)
+{
   if(channel != _config.myChannel)
     return;
   if(cc != _config.ccCV3)
     return;
-  LOG <<"handleControlChange:" <<channel <<", cc:" <<cc <<", value:" <<value <<"\n";
+//   LOG <<"handleControlChange:" <<channel <<", cc:" <<cc <<", value:" <<value <<"\n";
   MBCV.updateCV(value, 3);
 }
 
-void MbMidiRouter::handleClock() {
+void MbMidiRouter::handleClock()
+{
     MIRO._clockState = (MIRO._clockState + 1) % (24*8);
     // LOG <<MIRO._clockState <<",";
 }
@@ -79,7 +81,8 @@ void MbMidiRouter::handleClock() {
 #include "MIDIUSB.h"
 #endif
 
-void MbMidiUSB::loop() {
+void MbMidiUSB::loop()
+{
 #ifdef _midiusb_
     midiEventPacket_t rx;
 
