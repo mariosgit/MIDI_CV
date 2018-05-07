@@ -1,10 +1,26 @@
 #include "mbmidimatrix.h"
+#include "EEPROM.h"
 
 //MIDI_CREATE_INSTANCE(HardwareSerial, Serial1, MIDI);
 midi::MidiInterface<HardwareSerial> MIDI((HardwareSerial&)Serial1);
 MbMidiConfig _config;
 MbMidiRouter MIRO;
 MbMidiUSB MIDIUSB;
+
+void MbMidiConfig::store()
+{
+    int address = 0;
+    EEPROM.update(address++, myChannel);
+    EEPROM.update(address++, lowNote);
+    EEPROM.update(address++, ccCV3);
+}
+void MbMidiConfig::restore()
+{
+    int address = 0;
+    myChannel = EEPROM.read(address++);
+    lowNote   = EEPROM.read(address++);
+    ccCV3     = EEPROM.read(address++);
+}
 
 MbMidiRouter::MbMidiRouter() :
     _lastPitch(0xff),
@@ -25,7 +41,7 @@ void MbMidiRouter::handleNoteOn(byte channel, byte pitch, byte velocity)
     if(pitch < _config.lowNote)
         return;
 
-    //LOG <<"handleNoteOn ch:" <<channel <<", pitch:" <<pitch <<", vel:" <<velocity <<"\n";
+    LOG <<"handleNoteOn ch:" <<channel <<", pitch:" <<pitch <<", vel:" <<velocity <<"\n";
 
     digitalWrite(PIN_LED, LOW);
     MBCV.updateCV(0, 0); //gate off
@@ -49,13 +65,13 @@ void MbMidiRouter::handleControlChange(byte channel, byte cc, byte value) {
     return;
   if(cc != _config.ccCV3)
     return;
-  LOG <<"handleControlChange:" <<channel <<", cc:" <<cc <<", vel:" <<value <<"\n";
+  LOG <<"handleControlChange:" <<channel <<", cc:" <<cc <<", value:" <<value <<"\n";
   MBCV.updateCV(value, 3);
 }
 
 void MbMidiRouter::handleClock() {
     MIRO._clockState = (MIRO._clockState + 1) % (24*8);
-    //LOG <<MIRO._clockState <<",";
+    // LOG <<MIRO._clockState <<",";
 }
 
 #define _midiusb_ 1

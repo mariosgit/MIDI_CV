@@ -25,7 +25,10 @@ struct MbMidiConfig
     byte lowNote = 36;  // electribes 2. octave button
     byte myChannel = 1; // textual 1-16
     byte ccCV3 = 74;
+    void store();
+    void restore();
 };
+
 extern MbMidiConfig _config;
 
 class MbMidiRouter

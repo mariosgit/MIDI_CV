@@ -11,6 +11,12 @@ library folder.
 
 How it works
 
+### Used Libraries
+- Timer
+- MIDI
+- MidiUSB
+- encoder
+
 
 Display:
 Extra thing, somewhat optional or replaceable by DOGM or similar SPI based displays.

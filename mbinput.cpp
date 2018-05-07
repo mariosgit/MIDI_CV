@@ -13,19 +13,19 @@ void InputEvents::updateEncoderCB()
     
     if(button == ClickEncoder::Clicked)
     {
-      _inputEvents.encClicked = true;
-      LOG << "clicked\n";
+        _inputEvents.encClicked = true;
+        LOG << "clicked\n";
     }
     if(button == ClickEncoder::DoubleClicked)
     {
-      _inputEvents.encDoubleClicked = true;
-      LOG << "double clicked\n";
+        _inputEvents.encDoubleClicked = true;
+        LOG << "double clicked\n";
     }
     
     auto val = _encoder.getValue();
     if(val != 0)
     {
-      _inputEvents.encOff -= val; // reverse direction
+        _inputEvents.encOff -= val; // reverse direction
     }
 }
 

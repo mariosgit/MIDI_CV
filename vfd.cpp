@@ -44,7 +44,7 @@ MbVFD::MbVFD() :
     for(byte i = 0; i < 10; i++)
         _chars['0'+i] = 0x40+i;
 
-    write_page(INFO,     "  mb'knobs     ");
+    write_page(INFO,     "               ");
     write_page(MIDI_IN,  "Channel:       ");
     write_page(MIDI_OUT, "Tune           "); //Midi out       ");
     write_page(CV0,      "CV0 gate       ");
@@ -53,54 +53,57 @@ MbVFD::MbVFD() :
     write_page(CV3,      "CV3 CC  xxx yyy");
 }
 
-void MbVFD::begin(byte pinCS, byte pinRS) {
-  _pinCS = pinCS;
-  _pinRS = pinRS;
+void MbVFD::begin(byte pinCS, byte pinRS)
+{
+    _pinCS = pinCS;
+    _pinRS = pinRS;
 
-  SPI.begin();
+    SPI.begin();
 
-  pinMode(_pinCS, OUTPUT);
-  digitalWrite(_pinCS, HIGH);
+    pinMode(_pinCS, OUTPUT);
+    digitalWrite(_pinCS, HIGH);
 
-  if(_pinRS) {
-    pinMode(_pinRS, OUTPUT);
-    digitalWrite(_pinRS, LOW);
-    delay(50);
-    digitalWrite(_pinRS, HIGH);
-  }
+    if(_pinRS)
+    {
+        pinMode(_pinRS, OUTPUT);
+        digitalWrite(_pinRS, LOW);
+        delay(50);
+        digitalWrite(_pinRS, HIGH);
+    }
 
-  // init sequence
-  digitalWrite(_pinCS, LOW);
-  SPI.beginTransaction(_spiDispSettings);
-      SPI.transfer(0x6C); //12 digets
-  SPI.endTransaction();
-  digitalWrite(_pinCS, HIGH);
+    // init sequence
+    digitalWrite(_pinCS, LOW);
+    SPI.beginTransaction(_spiDispSettings);
+    SPI.transfer(0x6C); //12 digets
+    SPI.endTransaction();
+    digitalWrite(_pinCS, HIGH);
 
-  digitalWrite(_pinCS, LOW);
-  SPI.beginTransaction(_spiDispSettings);
-      SPI.transfer(0x5f); //mid level brightness 0x50|val
-  SPI.endTransaction();
-  digitalWrite(_pinCS, HIGH);
+    digitalWrite(_pinCS, LOW);
+    SPI.beginTransaction(_spiDispSettings);
+    SPI.transfer(0x5f); //mid level brightness 0x50|val
+    SPI.endTransaction();
+    digitalWrite(_pinCS, HIGH);
 
-  digitalWrite(_pinCS, LOW);
-  SPI.beginTransaction(_spiDispSettings);
-      SPI.transfer(0x70); //lights on
-  SPI.endTransaction();
-  digitalWrite(_pinCS, HIGH);
+    digitalWrite(_pinCS, LOW);
+    SPI.beginTransaction(_spiDispSettings);
+    SPI.transfer(0x70); //lights on
+    SPI.endTransaction();
+    digitalWrite(_pinCS, HIGH);
 }
 
-void MbVFD::clear_display() {
-  digitalWrite(_pinCS, LOW);
-  SPI.beginTransaction(_spiDispSettings);
-  SPI.transfer(0x10); //command data, followed by 16bit values
-  SPI.transfer(0x3c); SPI.transfer(0x3c);
-  SPI.transfer(0x3c); SPI.transfer(0x3c);
-  SPI.transfer(0x3c); SPI.transfer(0x3c);
-  SPI.transfer(0x3c); SPI.transfer(0x3c);
-  SPI.transfer(0x3c); SPI.transfer(0x3c);
-  SPI.transfer(0x3c); SPI.transfer(0x3c);
-  SPI.endTransaction();
-  digitalWrite(_pinCS, HIGH);
+void MbVFD::clear_display()
+{
+    digitalWrite(_pinCS, LOW);
+    SPI.beginTransaction(_spiDispSettings);
+    SPI.transfer(0x10); //command data, followed by 16bit values
+    SPI.transfer(0x3c); SPI.transfer(0x3c);
+    SPI.transfer(0x3c); SPI.transfer(0x3c);
+    SPI.transfer(0x3c); SPI.transfer(0x3c);
+    SPI.transfer(0x3c); SPI.transfer(0x3c);
+    SPI.transfer(0x3c); SPI.transfer(0x3c);
+    SPI.transfer(0x3c); SPI.transfer(0x3c);
+    SPI.endTransaction();
+    digitalWrite(_pinCS, HIGH);
 }
 
 void MbVFD::position(byte x, byte y) {
@@ -109,32 +112,33 @@ void MbVFD::position(byte x, byte y) {
 }
 
 void MbVFD::write_page(byte page, const char *msg) {
-  byte len = strlen(msg);
-  for(int i = _posX; i < _posX + len; i++)
-    _page[page][i] = *msg++;
+    byte len = strlen(msg);
+    for(int i = _posX; i < _posX + len; i++)
+        _page[page][i] = *msg++;
 }
 
 void MbVFD::string(const char *msg) {
-  digitalWrite(_pinCS, LOW);
-  SPI.beginTransaction(_spiDispSettings);
+    digitalWrite(_pinCS, LOW);
+    SPI.beginTransaction(_spiDispSettings);
 
-  byte len = strlen(msg);
-  byte start = (12-len-_posX)&0xf;
-  /*
-  LOG <<"str len:";
-  LOG <<len;
-  LOG <<",";
-  LOG <<start;
-  LOG <<"\n";
-  */
-  SPI.transfer(0x10|start); //command data
-  for(;len > 0;) {
-    SPI.transfer(_chars[msg[--len]]);
-  }
-  SPI.endTransaction();
-  digitalWrite(_pinCS, HIGH);
+    byte len = strlen(msg);
+    byte start = (12-len-_posX)&0xf;
+    /*
+    LOG <<"str len:";
+    LOG <<len;
+    LOG <<",";
+    LOG <<start;
+    LOG <<"\n";
+    */
+    SPI.transfer(0x10|start); //command data
+    for(;len > 0;)
+    {
+        SPI.transfer(_chars[msg[--len]]);
+    }
+    SPI.endTransaction();
+    digitalWrite(_pinCS, HIGH);
 
-  _posX = (_posX + len) % 16;
+    _posX = (_posX + len) % 16;
 }
 
 void MbVFD::define_char(byte adr, uint16_t ch) {
@@ -146,58 +150,61 @@ void MbVFD::define_char(byte adr, uint16_t ch) {
     digitalWrite(_pinCS, HIGH);
 }
 
-void MbVFD::loopVFD() {
+void MbVFD::loopVFD()
+{
+    if(_inputEvents.isClicked()) {
+        _loopVFD = (_loopVFD + 1) % _maxPages;
+        LOG <<"VFD isClicked menu:" <<_loopVFD <<"\n";
+    }
 
-  if(_inputEvents.isClicked()) {
-      _loopVFD = (_loopVFD + 1) % _maxPages;
-      LOG <<"VFD isClicked menu:" <<_loopVFD <<"\n";
-  }
-
-  //VFD.test();
-  VFD.clear_display();
-  switch(_loopVFD) {
+    //VFD.test();
+    VFD.clear_display();
+    switch(_loopVFD)
+    {
     case INFO: {
-      _loopVFDi = (_loopVFDi + _inputEvents.getEncVal()) % 16;
-      VFD.position(_loopVFDi, 1);
-      VFD.string(VFD._page[_loopVFD]);
-    } break;
+        // _loopVFDi = (_loopVFDi + _inputEvents.getEncVal()) % 16;
+        VFD.position(_loopVFDi, 1);
+        VFD.string(VFD._page[_loopVFD]);
+        } break;
     case MIDI_IN: {
-      auto enc = _inputEvents.getEncVal();
-      if(enc)
-        _config.myChannel = (enc + _config.myChannel);
-      if(_config.myChannel > 16)
-        _config.myChannel = 1;
-      if(_config.myChannel < 1)
-        _config.myChannel = 16;
-      MIDI.setInputChannel(_config.myChannel); // use for later change
-      VFD.position(0, 0);
-      VFD.string(VFD._page[_loopVFD]);
-      String sval1(_config.myChannel);
-      VFD.position(8, 0);
-      VFD.string(sval1.c_str());
-    } break;
+        auto enc = _inputEvents.getEncVal();
+        if(enc)
+            _config.myChannel = (enc + _config.myChannel);
+        if(_config.myChannel > 16)
+            _config.myChannel = 1;
+        if(_config.myChannel < 1)
+            _config.myChannel = 16;
+        MIDI.setInputChannel(_config.myChannel); // use for later change
+        VFD.position(0, 0);
+        VFD.string(VFD._page[_loopVFD]);
+        String sval1(_config.myChannel);
+        VFD.position(8, 0);
+        VFD.string(sval1.c_str());
+        _config.store();
+        } break;
     case CV3: {
-      auto enc = _inputEvents.getEncVal();
-      if(enc)
-        _config.ccCV3 = (enc + _config.ccCV3);
-      if(_config.ccCV3 > 127)
-        _config.ccCV3 = 0;
-      if(_config.ccCV3 < 0)
-        _config.ccCV3 = 127;
-      VFD.position(0,0);
-      VFD.string(VFD._page[_loopVFD]);
-      VFD.position(6, 0);
-      VFD.write_page(3, "   ");
-      String sval1(_config.ccCV3);
-      VFD.position(6, 0);
-      VFD.string(sval1.c_str());
-    } break;
+        auto enc = _inputEvents.getEncVal();
+        if(enc)
+            _config.ccCV3 = (enc + _config.ccCV3);
+        if(_config.ccCV3 > 127)
+            _config.ccCV3 = 0;
+        if(_config.ccCV3 < 0)
+            _config.ccCV3 = 127;
+        VFD.position(0,0);
+        VFD.string(VFD._page[_loopVFD]);
+        VFD.position(6, 0);
+        VFD.write_page(3, "   ");
+        String sval1(_config.ccCV3);
+        VFD.position(6, 0);
+        VFD.string(sval1.c_str());
+        _config.store();
+        } break;
     default: {
-      VFD.position(0,0);
-      VFD.string(VFD._page[_loopVFD]);
-    } break;
-  }
-  //_loopVFD = (_loopVFD + 1)%4;
+        VFD.position(0,0);
+        VFD.string(VFD._page[_loopVFD]);
+        } break;
+    }
+    //_loopVFD = (_loopVFD + 1)%4;
 }
 
 MbVFD VFD;
