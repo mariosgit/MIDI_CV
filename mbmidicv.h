@@ -17,6 +17,8 @@ public:
 
     //! Output a note value, this is translated into a voltage
     void updatePitch(byte key, byte adr);
+    //! Changes the Pitch be bend value
+    void updateBend(int bend, byte adr);
 
     //! Output a plain value 0-127
     void updateCV(byte value, byte adr);
@@ -28,6 +30,8 @@ public:
     const uint8_t adrLED[4] = {3,0,1,2};
     const uint8_t adrDAC[4] = {3,0,1,2};
     //const uint8_t adrDAC[4] = {2,1,0,3};
+
+    uint32_t buffer[4]; // keep the DAC val for each adr, used for pitch bend
 
 public:
     uint32_t dacCal;

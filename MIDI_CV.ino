@@ -21,15 +21,13 @@
 #include <Wire.h>
 #include <Timer.h>
 
+#include "mbConfig.h"
 #include "mbmidimatrix.h"
 #include "mbmidicv.h"
 #include "mbinput.h"
 #include "vfd.h"
 #include "mblog.h"
 
-// #define MB_VFD_TITLE "  mb'knobs    "
-// #define MB_VFD_TITLE "  mb'drums    "
-#define MB_VFD_TITLE "  grand'pa    "
 
 const int PIN_DISP_RS = 4;
 const int PIN_DISP_CS = 5;
@@ -343,17 +341,19 @@ void midiLoop()
                 {
                 // MIRO.handleControlChange(MIDI.getChannel(), MIDI.getData1(), MIDI.getData2() );
 
+#ifndef MB_MIDICV_MODE_DOUBLE_GATE_PITCH
                 String sval1(MIDI.getData1());
                 VFD.position(9, 0);
                 VFD.write_page(VFD.CV3, "   ");
                 VFD.position(9+int(MIDI.getData1()<10)+int(MIDI.getData1()<100), 0);
                 VFD.write_page(VFD.CV3, sval1.c_str());
                 // LOG << "CC " <<MIDI.getData1() <<" " <<MIDI.getData2() <<"\n";
+#endif
                 }
                 break;
             // See the online reference for other message types
             default:
-                LOG.print(MIDI.getType(), HEX);
+                // LOG.print(MIDI.getType(), HEX);
                 break;
             }
         }

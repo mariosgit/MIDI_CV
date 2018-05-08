@@ -39,7 +39,7 @@ class MbMidiRouter
     // callbacks for serial midi
     static void handleNoteOn(byte channel, byte pitch, byte velocity);
     static void handleNoteOff(byte channel, byte pitch, byte velocity);
-    static void handlePitchBend(byte channel, byte bend);
+    static void handlePitchBend(byte channel, int bend);
     static void handleControlChange(byte channel, byte pitch, byte velocity);
     static void handleClock();
     static void handleStart();
@@ -54,7 +54,7 @@ class MbMidiRouter
     // status for visualization
     byte _lastPitch;
     byte _clockState;
-    static byte _bend;
+    static int _bend;
     static bool _running;
 };
 extern MbMidiRouter MIRO;

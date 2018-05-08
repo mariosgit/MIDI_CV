@@ -1,3 +1,4 @@
+#include "mbConfig.h"
 #include "mbmidimatrix.h"
 #include "EEPROM.h"
 
@@ -24,7 +25,7 @@ void MbMidiConfig::restore()
 
 /*************************************************/
 
-byte MbMidiRouter::_bend = 0;
+int  MbMidiRouter::_bend = 0;
 bool MbMidiRouter::_running = false;
 
 MbMidiRouter::MbMidiRouter() :
@@ -43,6 +44,7 @@ void MbMidiRouter::handleNoteOn(byte channel, byte pitch, byte velocity)
         return;
 
     MIRO._lastPitch = pitch;
+#ifndef MB_MIDICV_MODE_DOUBLE_GATE_PITCH
     if(pitch < _config.lowNote)
         return;
 
@@ -51,9 +53,30 @@ void MbMidiRouter::handleNoteOn(byte channel, byte pitch, byte velocity)
     digitalWrite(PIN_LED, LOW);
     MBCV.updateCV(0, 0); //gate off
     MBCV.updatePitch(pitch - _config.lowNote, 1);
+    MBCV.updateBend(_bend, 1);
     MBCV.updateCV(velocity, 2);
     MBCV.updateCV(0xff, 0); //gate on
     digitalWrite(PIN_LED, HIGH);
+#else
+    if(pitch < 60) // C4
+    {
+        digitalWrite(PIN_LED, LOW);
+        MBCV.updateCV(0, 0); //gate off
+        MBCV.updatePitch(pitch - 0, 1);
+        MBCV.updateBend(_bend, 1);
+        MBCV.updateCV(0xff, 0); //gate on
+        digitalWrite(PIN_LED, HIGH);
+    }
+    else
+    {
+        digitalWrite(PIN_LED, LOW);
+        MBCV.updateCV(0, 2); //gate off
+        MBCV.updatePitch(pitch - 60, 3);
+        MBCV.updateBend(_bend, 3);
+        MBCV.updateCV(0xff, 2); //gate on
+        digitalWrite(PIN_LED, HIGH);
+    }
+#endif
 }
 
 void MbMidiRouter::handleNoteOff(byte channel, byte pitch, byte velocity)
@@ -61,14 +84,31 @@ void MbMidiRouter::handleNoteOff(byte channel, byte pitch, byte velocity)
     if(channel != _config.myChannel)
         return;
     MIRO._lastPitch = 0xff;
+#ifndef MB_MIDICV_MODE_DOUBLE_GATE_PITCH
     digitalWrite(PIN_LED, LOW);
     MBCV.updateCV(0, 0); //gate off
+#else
+    if(pitch < 60)
+    {
+        digitalWrite(PIN_LED, LOW);
+        MBCV.updateCV(0, 0); //gate off
+    }
+    else
+    {
+        digitalWrite(PIN_LED, LOW);
+        MBCV.updateCV(0, 2); //gate off
+    }
+#endif
 }
 
-void MbMidiRouter::handlePitchBend(byte channel, byte bend)
+void MbMidiRouter::handlePitchBend(byte channel, int bend)
 {
     _bend = bend;
-    LOG <<"handlePitchBend ch:" <<channel <<", bend:" <<_bend <<"\n";
+    MBCV.updateBend(_bend, 1);
+#ifdef MB_MIDICV_MODE_DOUBLE_GATE_PITCH
+    MBCV.updateBend(_bend, 3);
+#endif
+    // LOG <<"handlePitchBend ch:" <<channel <<", bend:" <<_bend <<"\n";
     // MBCV.updateCV(value, 1);
 }
 
@@ -79,7 +119,9 @@ void MbMidiRouter::handleControlChange(byte channel, byte cc, byte value)
     if(cc != _config.ccCV3)
         return;
 //   LOG <<"handleControlChange:" <<channel <<", cc:" <<cc <<", value:" <<value <<"\n";
+#ifndef MB_MIDICV_MODE_DOUBLE_GATE_PITCH
     MBCV.updateCV(value, 3);
+#endif
 }
 
 void MbMidiRouter::handleClock()
@@ -98,6 +140,15 @@ void MbMidiRouter::handleStop()
 {
     // MIRO._clockState = 0;
     MIRO._running = false;
+
+    MBCV.updateBend(0, 0);
+    MBCV.updateBend(0, 1);
+    MBCV.updateBend(0, 2);
+    MBCV.updateBend(0, 3);
+    MBCV.updateCV(0, 0);
+    MBCV.updateCV(0, 1);
+    MBCV.updateCV(0, 2);
+    MBCV.updateCV(0, 3);
 }
 
 #define _midiusb_ 1

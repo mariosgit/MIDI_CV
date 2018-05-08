@@ -1,4 +1,6 @@
 #include <MIDI.h>
+
+#include "mbConfig.h"
 #include "mblog.h"
 #include "mbmidimatrix.h"
 #include "vfd.h"
@@ -47,10 +49,17 @@ MbVFD::MbVFD() :
     write_page(INFO,     "               ");
     write_page(MIDI_IN,  "Channel:       ");
     write_page(MIDI_OUT, "Tune           "); //Midi out       ");
+#ifndef MB_MIDICV_MODE_DOUBLE_GATE_PITCH
     write_page(CV0,      "CV0 gate       ");
     write_page(CV1,      "CV1 pitch      ");
     write_page(CV2,      "CV2 velocity   ");
     write_page(CV3,      "CV3 CC  xxx yyy");
+#else
+    write_page(CV0,      "CV0 gate  <<   ");
+    write_page(CV1,      "CV1 pitch <<   ");
+    write_page(CV2,      "CV2 gate  >>   ");
+    write_page(CV3,      "CV3 pitch >>   ");
+#endif
 }
 
 void MbVFD::begin(byte pinCS, byte pinRS)
@@ -190,14 +199,16 @@ void MbVFD::loopVFD()
             _config.ccCV3 = 0;
         if(_config.ccCV3 < 0)
             _config.ccCV3 = 127;
+        _config.store();
         VFD.position(0,0);
         VFD.string(VFD._page[_loopVFD]);
+#ifndef MB_MIDICV_MODE_DOUBLE_GATE_PITCH
         VFD.position(6, 0);
         VFD.write_page(3, "   ");
         String sval1(_config.ccCV3);
         VFD.position(6, 0);
         VFD.string(sval1.c_str());
-        _config.store();
+#endif
         } break;
     default: {
         VFD.position(0,0);
