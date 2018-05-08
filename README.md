@@ -4,7 +4,7 @@ in development ! Check later...
 
 System software for my MIDI to CV interface, which can be found there: ADD LINK.
 
-![Image of MidiCV](images/IMG_0967.png)
+![Image of MidiCV](images/IMG_0967.JPG)
 
 To keep a bit of cleanyness, I split the code into the main ino and some potential
 lib files (.h + .cpp).
