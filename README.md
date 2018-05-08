@@ -4,6 +4,8 @@ in development ! Check later...
 
 System software for my MIDI to CV interface, which can be found there: ADD LINK.
 
+![Image of MidiCV](images/IMG_0967.png)
+
 To keep a bit of cleanyness, I split the code into the main ino and some potential
 lib files (.h + .cpp).
 The latter could also be used as a stand alone lib when put into your Arduino
